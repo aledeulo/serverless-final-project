@@ -5,10 +5,26 @@ service: serverless-todo-app
 
 plugins:
   - serverless-webpack
-  - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
   - serverless-plugin-canary-deployments
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
+
+custom:
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: ToDos API
+        description: serverless api for ToDo application
+    models:
+      - name: CreateTodo
+        contentType: application/json
+        schema: ${file(models/create-todo-model.json)}
+      - name: UpdateTodo
+        contentType: application/json
+        schema: ${file(models/update-todo-model.json)}
 
 provider:
   name: aws
@@ -45,8 +61,7 @@ provider:
         - Effect: Allow
           Action:
             - codedeploy:*
-          Resource:
-            - "*"
+          Resource: arn:aws:iam::aws:policy/AWSLambda_FullAccess
 
 
 functions:
@@ -83,10 +98,13 @@ functions:
           path: todos
           cors: true
           authorizer: Auth
-          reqValidatorName: RequestBodyValidator
-          request:
-            schemas:
-              application/json: ${file(models/create-todo-model.json)}
+          documentation:
+            summary: Create todo task
+            description: Create a new todo item
+            requestBody:
+              description: Validate request body for TODOs
+            requestModels:
+              application/json: CreateTodo
     iamRoleStatementsInherit: true
     iamRoleStatements: 
       - Effect: Allow
@@ -104,10 +122,13 @@ functions:
           path: todos/{todoId}
           cors: true
           authorizer: Auth
-          reqValidatorName: RequestBodyValidator
-          request:
-            schemas:
-              application/json: ${file(models/update-todo-model.json)}  
+          documentation:
+            summary: Update todo task
+            description: Update TODO item
+            requestBody:
+              description: Validate update request body for TODOs
+            requestModels:
+              application/json: UpdateTodo
     iamRoleStatementsInherit: true
     iamRoleStatements: 
       - Effect: Allow
