@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import 'source-map-support/register';
 import * as middy from 'middy';
-import { cors } from 'middy/middlewares';
+import { cors, httpErrorHandler } from 'middy/middlewares';
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest';
 import { getUserId } from '../utils';
 import { createTodo } from '../../helpers/todos';
@@ -12,30 +12,20 @@ export const handler = middy(
     const newTodo: CreateTodoRequest = JSON.parse(event.body);
     console.log('handler: Received payload: %s', JSON.stringify(newTodo));
     // TODO: Implement creating a new TODO item
-    try {
-      const userId = getUserId(event);
-      console.log('handler: Attempting to create TODO for user: %s', userId);
-      const item:TodoItem = await createTodo(userId, newTodo);
-      return {
-        statusCode: 201,
-        body: JSON.stringify({
-          newTodo: item
-        })
-      };   
-    } catch (error) {
-      console.error('handler: create TODO failed with an error. See response body');
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          error: error.message,
-          request: newTodo
-        })
-      };
-    }
+    const userId = getUserId(event);
+    console.log('handler: Attempting to create TODO for user: %s', userId);
+    const item:TodoItem = await createTodo(userId, newTodo);
+    return {
+      statusCode: 201,
+      body: JSON.stringify({
+        newTodo: item
+      })
+    }; 
   })
 
-handler.use(
-  cors({
+handler
+.use(httpErrorHandler())
+.use(cors({
     credentials: true
   })
 )

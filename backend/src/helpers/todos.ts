@@ -11,11 +11,12 @@ import { TodoUpdate } from '../models/TodoUpdate';
 const logger = createLogger('TodosService');
 const todoAccess = new TodosAccess();
 const attachmentUtils = new AttachmentUtils();
-const bucketName = attachmentUtils.getBucketName();
 
-export async function createAttachmentPresignedUrl(todoId:string): Promise<string> {
+export async function createAttachmentPresignedUrl(todoId:string, userId:string): Promise<string> {
 	logger.info('createAttachmentPresignedUrl: Received command to generate signed url for todo: %s', todoId);
-    return await attachmentUtils.getUploadUrl(todoId);
+	const url = await attachmentUtils.getUploadUrl(todoId);
+	await attachmentUtils.updateAttachment(todoId, userId);
+    return url;
 }
 
 export async function getTodosForUser(userId:string):Promise<TodoItem[]> {
@@ -24,6 +25,7 @@ export async function getTodosForUser(userId:string):Promise<TodoItem[]> {
 }
 
 export async function createTodo(userId:string, request:CreateTodoRequest): Promise<TodoItem> {
+	logger.info('createTodo: Received command to create a TODO for user: %s', userId);
 	const todoId = uuid.v4();
 	const item: TodoItem = {
 		userId,
@@ -31,28 +33,22 @@ export async function createTodo(userId:string, request:CreateTodoRequest): Prom
 		createdAt: new Date().toISOString(),
 		name: request.name,
 		dueDate: request.dueDate,
-		done: false,
-		attachmentUrl: `https://${bucketName}.s3.amazonaws.com/${todoId}`
-	}
+		done: false
+	};
 	return await todoAccess.createTodo(item);
 }
 
 export async function updateTodo(item:UpdateTodoRequest, todoId:string, userId:string): Promise<void>{
 	logger.info('updateTodo: Received command to update TODO: %s', todoId);
-	const exist:boolean = await validateTodoExist(todoId);
-	if (!exist) {
-		throw new Error("updateTodo: No items in dynamodb with todoId: " + todoId);		
-	}
-
 	const todoUpdate:TodoUpdate = {
 		name: item.name,
 		done: item.done,
 		dueDate: item.dueDate
-	}
+	};
 	logger.info('updateTodo: TODO validated for id: %s. Sending request to update.', todoId);
 	await todoAccess.updateTodo(todoUpdate, todoId, userId);
-} 
+}
 
-function validateTodoExist(todoId:string):Promise<boolean> {
-	return todoAccess.verifyTodoItem(todoId);
+export async function deleteTodo(todoId: string, userId: string): Promise<any> {
+	await todoAccess.delete(todoId, userId);
 }

@@ -23,7 +23,7 @@ export const handler = middy(
     }
 
     console.log('handler: Received todoId: %s to get signedUrl', todoId);
-    const preSignedUrl = await createAttachmentPresignedUrl(todoId);
+    const preSignedUrl = await createAttachmentPresignedUrl(todoId, userId);
     return {
       statusCode: 200,
       body: JSON.stringify({
