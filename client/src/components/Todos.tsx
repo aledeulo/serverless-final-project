@@ -91,7 +91,8 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   async componentDidMount() {
     try {
-      const todos = await getTodos(this.props.auth.getIdToken())
+      const todos = await getTodos(this.props.auth.getIdToken());
+      console.log("getTodos: Received TODOs: %s", JSON.stringify(todos));
       this.setState({
         todos,
         loadingTodos: false

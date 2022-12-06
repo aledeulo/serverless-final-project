@@ -12,6 +12,14 @@ export const handler = middy(
     const todoId = event.pathParameters.todoId;
     const userId:string = getUserId(event);
     const updatedTodo: UpdateTodoRequest = JSON.parse(event.body);
+    if (!updatedTodo.name || !updatedTodo.dueDate || !updatedTodo.done) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: "Either name, dueDate or done are missing in the request."
+       })
+      }; 
+    }
     // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
     console.log('handler: Received request to update TODO: %s with payload: %s', todoId, event.body);
     await updateTodo(updatedTodo, todoId, userId);

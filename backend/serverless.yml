@@ -7,7 +7,6 @@ plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
-  - serverless-plugin-canary-deployments
   - serverless-reqvalidator-plugin
   - serverless-aws-documentation
 
@@ -58,10 +57,6 @@ provider:
             - xray:PutTelemetryRecords
             - xray:PutTraceSegments
           Resource: "*"
-        - Effect: Allow
-          Action:
-            - codedeploy:*
-          Resource: arn:aws:iam::aws:policy/AWSLambda_FullAccess
 
 
 functions:
